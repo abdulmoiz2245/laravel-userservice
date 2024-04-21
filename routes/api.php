@@ -7,17 +7,10 @@ use App\Http\Controllers\Api\VerifyEmailController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->get(
-    '/user',
-    function (Request $request) {
-        return $request->user();
-    }
-);
+
 
 Route::group(['prefix'=>'user','as'=>'user.', 'middleware'=>'auth:sanctum'], function(){
-    Route::get('/', function (Request $request) {
-        return $request->user();
-    })->name('index');
+    Route::get('/', [UserController::class, 'index'])->name('index');
     Route::put('/update', [UserController::class, 'update'])->name('update');
 });
 

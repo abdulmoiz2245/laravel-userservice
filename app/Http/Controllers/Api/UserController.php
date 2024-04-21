@@ -14,6 +14,35 @@ class UserController extends Controller
 {
     //
 
+    /**
+     * Get User
+     *
+     * @param mixed $request Request
+     * 
+     * @return void
+     */
+    public function index()
+    {
+        $user = User::find(Auth::id());
+        if (!$user) {
+            return response()->json(
+                [
+                    'message' => 'User not found',
+                    'data' => null,
+                    'status' => false,
+                    'response_code' => 404
+                ]
+            );
+        }
+        return response()->json(
+            [
+                'message' => 'User found',
+                'data' => $user,
+                'status' => 200,
+                'response_code' => 200
+            ]
+        );
+    }
         
     /**
      * Edit update
