@@ -32,7 +32,8 @@ class UserController extends Controller
                     'data' => null,
                     'status' => false,
                     'response_code' => 404
-                ]
+                ],
+                404
             );
         }
 
@@ -44,7 +45,8 @@ class UserController extends Controller
                 'data' => $user,
                 'status' => 200,
                 'response_code' => 200
-            ]
+            ],
+            200
         );
 
     }

@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\VerificationCodeMail;
+use App\Mail\WelcomeMail;
+
 
 class AuthController extends Controller
 {
@@ -29,29 +33,31 @@ class AuthController extends Controller
             [
                 'name'      => 'required|string|max:255',
                 'email'     => 'required|string|max:255|unique:users',
-                'password'  => 'required|string'
+                'password'  => 'required|string|min:8'
             ]
         );
-
         if ($validator->fails()) {
             return response()->json(
                 [
                     'message' => 'Valiation Failed',
                     'data' => $validator->errors(),
                     'status' => false,
-                    'response_code' => 422
-                ]
+                ],
+                422
             );
         }
+        $verificationCode = random_int(100000, 999999);
 
         $user = User::create(
             [
                 'name'      => $request->name,
                 'email'     => $request->email,
-                'password'  => Hash::make($request->password)
+                'password'  => Hash::make($request->password),
+                'verification_code' => $verificationCode,
             ]
         );
- 
+        Mail::to($user->email)->send(new VerificationCodeMail($verificationCode));
+        Mail::to($user->email)->send(new WelcomeMail($user->name));
         // event(new Registered($user));
         $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json(
@@ -62,7 +68,8 @@ class AuthController extends Controller
                 'token_type'    => 'Bearer',
                 'status'        => true,
                 'response_code' => 201
-            ]
+            ],
+            201
         );
     }
 
