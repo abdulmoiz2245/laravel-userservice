@@ -67,15 +67,15 @@ class VerifyEmailController extends Controller
             return response()->json(['message' =>
             "Your email does not exist in our system. Please sign up to create an account.",
             'email_exists' => $emailExists,
-            'status' => false,
-            'response_code' => 400
-        ], 404);
+            'status' => 200,
+            'response_code' => 200
+        ], 200);
         }
 
         return response()->json([
             'email_exists' => $emailExists,
-            'status' => 200,
-            'response_code' => 200
-        ]);
+            'status' => 400,
+            'response_code' => 400
+        ],400);
     }
 }
