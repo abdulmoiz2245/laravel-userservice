@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationCodeMail;
-use App\Mail\WelcomeMail;
 
 
 class AuthController extends Controller
@@ -57,7 +56,6 @@ class AuthController extends Controller
             ]
         );
         Mail::to($user->email)->send(new VerificationCodeMail($verificationCode));
-        Mail::to($user->email)->send(new WelcomeMail($user->name));
         // event(new Registered($user));
         $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json(
