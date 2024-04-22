@@ -23,6 +23,9 @@ Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke
     // ->middleware(['signed', 'throttle:6,1'])
     ->name('verification.verify');
 
+//Email Existence
+Route::get('/email/check', [VerifyEmailController::class, 'checkEmail'])->name('email.check');
+
 // Resend link to verify email
 Route::post('/email/verify/resend', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
