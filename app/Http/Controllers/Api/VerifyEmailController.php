@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,8 +45,8 @@ class VerifyEmailController extends Controller
     
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
+            Mail::to($user->email)->send(new WelcomeMail($user->name));
         }
-    
         return response()->json([
             'message' => 'Email Verified',
             'data' => $user,
