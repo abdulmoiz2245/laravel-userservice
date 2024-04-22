@@ -58,33 +58,23 @@ class VerifyEmailController extends Controller
 
     public function checkEmail(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'email' => 'required|email|string|max:255'
         ]);
-    
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation Failed',
-                'errors' => $validator->errors(),
-                'status' => false,
-                'response_code' => 422
-            ], 422);
-        }
-    
-        $emailExists = User::where('email', $request->email)->get();
-    
-        if (!$emailExists) {
-            return response()->json([
-                'message' => 'Email not found',
-                'status' => false,
-                'response_code' => 404
-            ], 404);
-        }
-    
-        return response()->json([
-            'message' => 'Email exist',
+
+        $emailExists = User::where('email', $request->email)->exists();
+        if( !$emailExists ) {
+            return response()->json(['message' =>
+            "Your email does not exist in our system. Please sign up to create an account.",
             'email_exists' => $emailExists,
-            'status' => true,
+            'status' => false,
+            'response_code' => 400
+        ], 404);
+        }
+
+        return response()->json([
+            'email_exists' => $emailExists,
+            'status' => 200,
             'response_code' => 200
         ]);
     }
