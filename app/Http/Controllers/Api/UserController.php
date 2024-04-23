@@ -34,6 +34,9 @@ class UserController extends Controller
                 ]
             );
         }
+        if($user){
+            $user->image = asset('images/profile'). '/' . $user->image;
+        }
         return response()->json(
             [
                 'message' => 'User found',
@@ -78,5 +81,63 @@ class UserController extends Controller
             200
         );
 
+    }
+
+
+    public function profilePicUpload(Request $request)
+    {
+        try {
+            $user = User::find(Auth::id());
+            if (!$user) {
+                return response()->json([
+                    'message' => 'User not found',
+                    'status' => false,
+                    'response_code' => 404
+                ], 404);
+            }
+            $validator = Validator::make($request->all(), [
+                'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation Failed',
+                    'errors' => $validator->errors(),
+                    'status' => false,
+                    'response_code' => 422
+                ], 422);
+            }
+    
+            $oldProfileImg = $user->image;
+    
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $fileName = $file->getClientOriginalName();
+                $file->move('images/profile', $fileName);
+                if ($oldProfileImg && file_exists(public_path('images/profile/' . $oldProfileImg))) {
+                    unlink(public_path('images/profile/' . $oldProfileImg));
+                }
+    
+            }
+    
+            if ($user->image) {
+                $user['image'] = asset('images/profile') . '/' . $user->image;
+                $user->update(['image' => $user['image']]);
+            }
+    
+            return response()->json([
+                'message' => 'User updated successfully',
+                'data' => $user,
+                'status' => true,
+                'response_code' => 200
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update user',
+                'error' => $e->getMessage(),
+                'status' => false,
+                'response_code' => 500
+            ], 500);
+        }
     }
 }

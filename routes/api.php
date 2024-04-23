@@ -15,6 +15,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::group(['prefix'=>'user','as'=>'user.', 'middleware'=>'auth:sanctum'], function(){
     Route::get('/', [UserController::class, 'index'])->name('index');
     Route::put('/update', [UserController::class, 'update'])->name('update');
+    Route::patch('/profile-pic-upload', [UserController::class, 'profilePicUpload'])->name('profilePicUpload');
+
+
 });
 
 

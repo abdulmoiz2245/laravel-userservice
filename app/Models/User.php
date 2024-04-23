@@ -29,6 +29,7 @@ class User extends Authenticatable
         'street',
         'city',
         'state',
+        'image',
         'zip',
         'time_zone',
         'skype'
