@@ -109,22 +109,22 @@ class UserController extends Controller
             }
     
             $oldProfileImg = $user->image;
-    
+
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
-                $fileName = $file->getClientOriginalName();
+                $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 $file->move('images/profile', $fileName);
+            
+                $user->image = $fileName;
                 if ($oldProfileImg && file_exists(public_path('images/profile/' . $oldProfileImg))) {
                     unlink(public_path('images/profile/' . $oldProfileImg));
                 }
-    
             }
-    
+            $user->save();
+            
             if ($user->image) {
-                $user['image'] = asset('images/profile') . '/' . $user->image;
-                $user->update(['image' => $user['image']]);
+                $user->image = asset('images/profile') . '/' . $user->image;
             }
-    
             return response()->json([
                 'message' => 'User updated successfully',
                 'data' => $user,

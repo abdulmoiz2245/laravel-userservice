@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationCodeMail;
-
+use Twilio\Exceptions\TwilioException;
+use Twilio\Rest\Client;
 
 class AuthController extends Controller
 {
@@ -116,5 +117,116 @@ class AuthController extends Controller
                 'message' => 'Logout successfull'
             ]
         );
+    }
+
+
+    public function sendCode(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|string|max:20',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation Failed',
+                'errors' => $validator->errors(),
+                'status' => false,
+            ], 422);
+        }
+            $verificationCode = random_int(100000, 999999);
+            $user = User::find($id);
+            if (!$user) {
+                return response()->json([
+                    'message' => 'User not found',
+                    'status' => false,
+                ], 404);
+            }
+
+        try {
+            $user->phone = $request->phone;
+            $user->phone_code = $verificationCode;
+            $this->sendVerificationCode($request->phone, $verificationCode);
+            $user->save();
+            return response()->json([
+                'message' => 'Verification code sent successfully to your phone.',
+                'status' => true,
+            ]);
+        } catch (TwilioException $e) {
+            return response()->json([
+                'message' => 'Failed to send verification code.',
+                'error' => $e->getMessage(),
+                'status' => false,
+            ], 500);
+        }
+    }
+    
+
+    private function sendVerificationCode(string $phoneNumber, int $verificationCode): void
+    {
+        $sid = config('services.twilio.sid');
+        $token = config('services.twilio.token');
+        $from = config('services.twilio.from');
+
+        $client = new Client($sid, $token);
+
+        $client->messages->create(
+            $phoneNumber,
+            [
+                'from' => $from,
+                'body' => "Your verification code is: $verificationCode",
+            ]
+        );
+    }
+
+    public function verifyPhoneCode(Request $request, $id, $code)
+    {
+        if (!$code) {
+            return response()->json([
+                'message' => 'Validation Failed: Code is Required',
+                'status' => false,
+            ], 422);
+        }
+        if (strlen($code) < 6) {
+            return response()->json([
+                'message' => 'Validation Failed: The code must least 6 digits.',
+                'status' => false,
+            ], 422);
+        }
+        if (!is_numeric($code)) {
+            return response()->json([
+                'message' => 'Validation Failed: The code must be a numeric string with at least 6 digits.',
+                'status' => false,
+            ], 422);
+        }
+    
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found',
+                'status' => false,
+            ], 404);
+        }
+    
+        if ($user->phone_verified_at) {
+            return response()->json([
+                'message' => 'Phone number already verified.',
+                'status' => true
+            ], 200);
+        }
+    
+        if ($request->code == $user->phone_code) {
+            $user->phone_verified_at = now();
+            $user->save();
+    
+            return response()->json([
+                'message' => 'Phone number verified successfully.',
+                'status' => true,
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Invalid verification code.',
+                'status' => false,
+            ], 400);
+        }
     }
 }

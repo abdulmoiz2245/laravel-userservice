@@ -16,9 +16,12 @@ Route::group(['prefix'=>'user','as'=>'user.', 'middleware'=>'auth:sanctum'], fun
     Route::get('/', [UserController::class, 'index'])->name('index');
     Route::put('/update', [UserController::class, 'update'])->name('update');
     Route::patch('/profile-pic-upload', [UserController::class, 'profilePicUpload'])->name('profilePicUpload');
-
-
 });
+
+//Send phone code
+Route::patch('/user/{id}/send-code', [AuthController::class, 'sendCode'])->name('sendCodeToPhone');
+// Verify  user phone with phone Code
+Route::get('/user/verify-phone-code/{id}/{code}', [AuthController::class, 'verifyPhoneCode'])->name('verifyPhoneCode');
 
 
 // Verify email
