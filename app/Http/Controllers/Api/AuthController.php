@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationCodeMail;
 use Twilio\Exceptions\TwilioException;
 use Twilio\Rest\Client;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -58,7 +60,7 @@ class AuthController extends Controller
         );
         Mail::to($user->email)->send(new VerificationCodeMail($verificationCode));
         // event(new Registered($user));
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = JWTAuth::fromUser($user);
         return response()->json(
             [
                 'message'       => 'User created successfully',
@@ -86,19 +88,24 @@ class AuthController extends Controller
             return response()->json($validator->errors());
         }
 
-        $credentials    =   $request->only('email', 'password');
-
-        if (!Auth::attempt($credentials)) {
-            return response()->json(
-                [
-                    'message' => 'User not found'
-                ],
-                401
-            );
+        $credentials = $request->only('email', 'password');
+        try {
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return response()->json([
+                    'message' => 'User not found',
+                    'status' => false
+                ], 401);
+            }
+        } catch (JWTException $e) {
+            return response()->json([
+                'message' => 'Could not create token',
+                'status' => false
+            ], 500);
         }
 
-        $user   = User::where('email', $request->email)->firstOrFail();
-        $token  = $user->createToken('auth_token')->plainTextToken;
+
+        // $user   = User::where('email', $request->email)->firstOrFail();
+        // $token  = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json(
             [
@@ -111,12 +118,19 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::user()->tokens()->delete();
-        return response()->json(
-            [
-                'message' => 'Logout successfull'
-            ]
-        );
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+            return response()->json([
+                'message' => 'User logged out successfully',
+                'status' => true
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to log out',
+                'error' => $e->getMessage(),
+                'status' => false
+            ], 500);
+        }
     }
 
 
@@ -156,7 +170,7 @@ class AuthController extends Controller
                 'message' => 'Failed to send verification code.',
                 'error' => $e->getMessage(),
                 'status' => false,
-            ], 500);
+            ], 400);
         }
     }
     
