@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 
 use App\Http\Controllers\Api\VerifyEmailController;
 
-Route::group(['prefix' => 'v1'], function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 
@@ -16,6 +15,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::put('/update', [UserController::class, 'update'])->name('update');
         Route::patch('/profile-pic-upload', [UserController::class, 'profilePicUpload'])->name('profilePicUpload');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        Route::post('/refresh-token', [AuthController::class, 'refreshToken'])->name('refreshToken');
     });
 
 //Send phone code
@@ -39,4 +39,3 @@ Route::post('/email/verify/resend', function (Request $request) {
 })
 // ->middleware(['auth:api', 'throttle:6,1'])
 ->name('verification.send');
-});

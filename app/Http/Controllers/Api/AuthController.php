@@ -58,8 +58,8 @@ class AuthController extends Controller
                 'verification_code' => $verificationCode,
             ]
         );
-        Mail::to($user->email)->send(new VerificationCodeMail($verificationCode));
-        // event(new Registered($user));
+        // Mail::to($user->email)->send(new VerificationCodeMail($verificationCode));
+        event(new Registered($user));
         $token = JWTAuth::fromUser($user);
         return response()->json(
             [
@@ -114,6 +114,13 @@ class AuthController extends Controller
                 'token_type'    => 'Bearer'
             ]
         );
+    }
+
+    public function refreshToken(Request $request)
+    {
+        $token = JWTAuth::parseToken()->refresh();
+        
+        return response()->json(['token' => $token]);
     }
 
     public function logout(Request $request)

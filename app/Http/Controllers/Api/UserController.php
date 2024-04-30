@@ -34,7 +34,7 @@ class UserController extends Controller
                 ]
             );
         }
-        if($user){
+        if($user['image'] != null){
             $user->image = asset('images/profile'). '/' . $user->image;
         }
         return response()->json(
