@@ -7,17 +7,16 @@ use Illuminate\Http\Request;
 
 use App\Http\Controllers\Api\VerifyEmailController;
 
-Route::post('v1/register', [AuthController::class, 'register']);
-Route::post('v1/login', [AuthController::class, 'login']);
+Route::group(['prefix' => 'v1'], function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
 
-
-
-Route::group(['prefix'=>'v1/user','as'=>'user.', 'middleware'=>'auth:api'], function(){
-    Route::get('/', [UserController::class, 'index'])->name('index');
-    Route::put('/update', [UserController::class, 'update'])->name('update');
-    Route::patch('/profile-pic-upload', [UserController::class, 'profilePicUpload'])->name('profilePicUpload');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-});
+    Route::group(['prefix' => 'user', 'as' => 'user.', 'middleware' => 'auth:api'], function () {
+        Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::put('/update', [UserController::class, 'update'])->name('update');
+        Route::patch('/profile-pic-upload', [UserController::class, 'profilePicUpload'])->name('profilePicUpload');
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    });
 
 //Send phone code
 Route::patch('/user/{id}/send-code', [AuthController::class, 'sendCode'])->name('sendCodeToPhone');
@@ -40,3 +39,4 @@ Route::post('/email/verify/resend', function (Request $request) {
 })
 // ->middleware(['auth:api', 'throttle:6,1'])
 ->name('verification.send');
+});
